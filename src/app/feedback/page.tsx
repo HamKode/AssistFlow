@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { FeedbackForm } from "@/components/feedback-form";
 
 export const metadata: Metadata = {
-  title: "Share your feedback — AssistFlow",
+  title: "Share your feedback",
 };
 
 export default function FeedbackPage() {

@@ -91,20 +91,19 @@ curl -X POST https://hook.usX.make.com/YOUR_FEEDBACK_WEBHOOK \
 3. Add **Gmail → Send an Email**:
    - **To**: `{{Email}}` (from the Tickets row)
    - **Subject**: `Your support ticket #{{Ticket ID}} has been resolved`
-   - **Content** (HTML, so the stars are clickable links — replace
-     `yoursite.vercel.app` with your actual deployed domain, or
-     `localhost:3000` while testing locally through a tunnel):
+   - **Content** (HTML, so the stars are clickable links — the live
+     deployed domain is `assist-flow-chat.vercel.app`):
 
 ```html
 <p>Hi {{Customer Name}},</p>
 <p>Your support ticket has been resolved: {{Resolution}}</p>
 <p>How was your experience? Tap a star:</p>
 <p>
-  <a href="https://yoursite.vercel.app/feedback?ticket={{Ticket ID}}&conversation={{Conversation ID}}&customer_id={{Customer ID}}&rating=1">★</a>
-  <a href="https://yoursite.vercel.app/feedback?ticket={{Ticket ID}}&conversation={{Conversation ID}}&customer_id={{Customer ID}}&rating=2">★★</a>
-  <a href="https://yoursite.vercel.app/feedback?ticket={{Ticket ID}}&conversation={{Conversation ID}}&customer_id={{Customer ID}}&rating=3">★★★</a>
-  <a href="https://yoursite.vercel.app/feedback?ticket={{Ticket ID}}&conversation={{Conversation ID}}&customer_id={{Customer ID}}&rating=4">★★★★</a>
-  <a href="https://yoursite.vercel.app/feedback?ticket={{Ticket ID}}&conversation={{Conversation ID}}&customer_id={{Customer ID}}&rating=5">★★★★★</a>
+  <a href="https://assist-flow-chat.vercel.app/feedback?ticket={{Ticket ID}}&conversation={{Conversation ID}}&customer_id={{Customer ID}}&rating=1">★</a>
+  <a href="https://assist-flow-chat.vercel.app/feedback?ticket={{Ticket ID}}&conversation={{Conversation ID}}&customer_id={{Customer ID}}&rating=2">★★</a>
+  <a href="https://assist-flow-chat.vercel.app/feedback?ticket={{Ticket ID}}&conversation={{Conversation ID}}&customer_id={{Customer ID}}&rating=3">★★★</a>
+  <a href="https://assist-flow-chat.vercel.app/feedback?ticket={{Ticket ID}}&conversation={{Conversation ID}}&customer_id={{Customer ID}}&rating=4">★★★★</a>
+  <a href="https://assist-flow-chat.vercel.app/feedback?ticket={{Ticket ID}}&conversation={{Conversation ID}}&customer_id={{Customer ID}}&rating=5">★★★★★</a>
 </p>
 ```
 
@@ -118,14 +117,15 @@ curl -X POST https://hook.usX.make.com/YOUR_FEEDBACK_WEBHOOK \
 
 ---
 
-## Step 4 — Local testing note (no public URL yet)
+## Step 4 — Production URL + env vars
 
-While developing locally, the email's links point at
-`http://localhost:3000/feedback?...` — clicking them from your own
-machine's email client works fine (localhost resolves on your machine).
-Once deployed to Vercel, swap the domain in Step 3.3 to the real one, and
-set `MAKE_FEEDBACK_WEBHOOK_URL` in Vercel's environment variables too (see
-`docs/phase-1-make-groq-setup.md` Step 6 for the pattern).
+The site is live at **https://assist-flow-chat.vercel.app** — the email
+template in Step 3.3 already points there. Make sure Vercel's Environment
+Variables (Project → Settings → Environment Variables) include
+`MAKE_WEBHOOK_URL`, `MAKE_FEEDBACK_WEBHOOK_URL`, `AIRTABLE_API_KEY`, and
+`AIRTABLE_BASE_ID` — without these the site silently falls back to its
+safe error states (see `docs/phase-1-make-groq-setup.md` Step 6 and
+`docs/phase-9-analytics.md` Step 4 for what each one is).
 
 ## Step 5 — Connect the repo
 

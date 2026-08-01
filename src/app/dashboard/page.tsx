@@ -3,7 +3,7 @@ import { getAnalyticsSnapshot, type AnalyticsSnapshot } from "@/lib/analytics";
 import { RefreshButton } from "@/components/refresh-button";
 
 export const metadata: Metadata = {
-  title: "Analytics — AssistFlow",
+  title: "Analytics",
 };
 
 export const dynamic = "force-dynamic";

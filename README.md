@@ -1,5 +1,7 @@
 # AssistFlow — AI Customer Support Automation Platform
 
+**Live demo**: https://assist-flow-chat.vercel.app
+
 AI-powered customer support that automates conversations, tickets, CRM, and
 human handoff. The website/chat widget is a Next.js app (this repo); all
 automation logic (AI calls, CRM, tickets, email, Slack, routing) lives in
