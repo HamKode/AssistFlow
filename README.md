@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AssistFlow — AI Customer Support Automation Platform
 
-## Getting Started
+AI-powered customer support that automates conversations, tickets, CRM, and
+human handoff. The website/chat widget is a Next.js app (this repo); all
+automation logic (AI calls, CRM, tickets, email, Slack, routing) lives in
+**Make.com** scenarios, per the project's core requirement — this repo is
+intentionally "thin," it's a customer interface in front of the automation
+engine.
 
-First, run the development server:
+## Stack
+
+- **Frontend**: Next.js (App Router) + Tailwind — landing page + floating
+  chat widget (`src/components/chat-widget.tsx`)
+- **Automation engine**: Make.com scenarios
+- **AI**: Groq (Llama models, OpenAI-compatible API) — not OpenAI
+- **Knowledge base / CRM / tickets**: Airtable
+- **Notifications**: Gmail, Slack (via Make.com)
+
+## Local development
 
 ```bash
+npm install
+cp .env.example .env.local   # then set MAKE_WEBHOOK_URL (see docs/phase-1)
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000. Until `MAKE_WEBHOOK_URL` points at a real
+Make.com scenario, the chat widget still works end-to-end — it just falls
+back to a safe "connecting you with an agent" message (see
+`src/app/api/chat/route.ts`).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## How the pieces fit together
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+Browser (chat-widget.tsx)
+  → POST /api/chat (this repo, keeps the Make.com webhook URL server-side)
+    → Make.com Custom Webhook
+      → Airtable: customer lookup / create
+      → Airtable: knowledge base search
+      → HTTP module → Groq (llama-3.3-70b-versatile)
+      → Parse JSON (answer, intent, category, priority, handoff, lead, reason)
+      → Router → CRM update / Ticket creation / Slack / Email
+      → Webhook response → back to /api/chat → browser
+```
 
-## Learn More
+## Build order (do not build everything at once)
 
-To learn more about Next.js, take a look at the following resources:
+This project is intentionally built in phases — each is independently
+demoable:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Phase | What | Docs |
+|---|---|---|
+| 1 | Basic chat: webhook → Groq → response | [docs/phase-1-make-groq-setup.md](docs/phase-1-make-groq-setup.md) |
+| 2 | Knowledge base (Airtable) + customer lookup | [docs/phase-2-knowledge-base.md](docs/phase-2-knowledge-base.md) |
+| 3 | Intent/category/priority/handoff detection | done as part of Phase 1's structured prompt |
+| 4 | Make.com Router (Support / Sales / Billing / Handoff) + tickets + Slack/Email | [docs/phase-4-router.md](docs/phase-4-router.md) |
+| 5 | Ticket system (Airtable) + resolution workflow | [docs/phase-5-8-feedback.md](docs/phase-5-8-feedback.md) |
+| 6 | CRM automation (tags, history, leads) | partially done (create/update + `Hot Lead` tag in Phase 4); deeper history/segmentation still open |
+| 7 | Email + Slack notifications | done (Phase 4 alerts + Phase 5 resolution email) |
+| 8 | Customer feedback / CSAT | [docs/phase-5-8-feedback.md](docs/phase-5-8-feedback.md) |
+| 9 | Analytics dashboard | next |
+| 10 | Polish: error handling, responsive UI, docs | ongoing |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Phases 1, 2, 4, 5, and 8 are built and documented. Later phases follow the same pattern:
+extend the one Make.com scenario (or add new ones per the original spec's
+Scenario 2–6 breakdown), and the frontend generally doesn't need to change
+since the `/api/chat` contract (`answer`, `intent`, `category`, `priority`,
+`handoff`, `lead`, `reason`) already carries everything the router needs.
 
-## Deploy on Vercel
+## Security notes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `MAKE_WEBHOOK_URL` is read server-side only (`src/app/api/chat/route.ts`),
+  never exposed to the browser.
+- The Groq API key lives **inside the Make.com scenario**, never in this
+  repo or in any environment variable here.
+- `.env.local` is git-ignored; only `.env.example` (no real values) is
+  committed.
