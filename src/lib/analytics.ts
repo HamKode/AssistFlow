@@ -33,16 +33,41 @@ export interface AnalyticsSnapshot {
   customerSatisfaction: number | null;
   feedbackCount: number;
   topCategories: CategoryCount[];
+  /** Tables that couldn't be read (e.g. not created in Airtable yet) — their metrics show as 0/empty above rather than failing the whole dashboard. */
+  unavailableTables: string[];
 }
 
 const OPEN_STATUSES = new Set(["Open", "In Progress", "Waiting for Customer"]);
 const RESOLVED_STATUSES = new Set(["Resolved", "Closed"]);
 
+/**
+ * Airtable tables are independent data sources — one missing/misconfigured
+ * table (e.g. Conversations not created yet) shouldn't take down metrics
+ * that come from tables that *are* working (Tickets, Feedback).
+ */
+async function fetchTableSafely<T extends object>(
+  table: string,
+  unavailableTables: string[],
+): Promise<T[]> {
+  try {
+    return await listAllRecords<T>(table);
+  } catch (error) {
+    console.error(`Analytics: "${table}" table unavailable, treating as empty:`, error);
+    unavailableTables.push(table);
+    return [];
+  }
+}
+
 export async function getAnalyticsSnapshot(): Promise<AnalyticsSnapshot> {
+  if (!process.env.AIRTABLE_API_KEY || !process.env.AIRTABLE_BASE_ID) {
+    throw new Error("AIRTABLE_API_KEY / AIRTABLE_BASE_ID are not configured.");
+  }
+
+  const unavailableTables: string[] = [];
   const [conversations, tickets, feedback] = await Promise.all([
-    listAllRecords<ConversationFields>("Conversations"),
-    listAllRecords<TicketFields>("Tickets"),
-    listAllRecords<FeedbackFields>("Feedback"),
+    fetchTableSafely<ConversationFields>("Conversations", unavailableTables),
+    fetchTableSafely<TicketFields>("Tickets", unavailableTables),
+    fetchTableSafely<FeedbackFields>("Feedback", unavailableTables),
   ]);
 
   const totalConversations = conversations.length;
@@ -80,5 +105,6 @@ export async function getAnalyticsSnapshot(): Promise<AnalyticsSnapshot> {
     customerSatisfaction,
     feedbackCount: ratings.length,
     topCategories,
+    unavailableTables,
   };
 }

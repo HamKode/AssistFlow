@@ -116,6 +116,18 @@ function DashboardBody({ snapshot }: { snapshot: AnalyticsSnapshot }) {
 
   return (
     <>
+      {snapshot.unavailableTables.length > 0 && (
+        <div
+          className="mt-6 rounded-xl border p-4 text-sm"
+          style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}
+        >
+          {snapshot.unavailableTables.join(", ")}{" "}
+          {snapshot.unavailableTables.length === 1 ? "table isn't" : "tables aren't"} set up in
+          Airtable yet, so related metrics below show as 0 — everything else is live data. See
+          docs/phase-9-analytics.md.
+        </div>
+      )}
+
       <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {tiles.map((t) => (
           <StatTile key={t.label} label={t.label} value={t.value} />
