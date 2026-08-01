@@ -174,10 +174,22 @@ Customer question: {{message}}
 
 Update the system prompt slightly to make the source explicit:
 
-> "...using only verified company information provided in the knowledge
-> base below the line 'Knowledge base:'. If the customer's question isn't
-> covered there, do not guess — set handoff to true and say you'll connect
-> them with a human agent who can help."
+> "...company-specific facts must come only from the knowledge base below
+> the line 'Knowledge base:' — never invent or guess these. If a question
+> isn't covered there but is general enough to help with directly (or just
+> needs a clarifying question), do that first. Only hand off if it
+> genuinely needs company-specific info you don't have, or the customer
+> explicitly asks for a human."
+
+**Why the wording matters**: an earlier version of this prompt said "if
+it's not in the knowledge base, hand off" — which sounds safe, but in
+practice made the AI escalate almost immediately on any question that
+wasn't a near-exact match for one of the (currently 4) FAQ rows, including
+questions it could have reasonably engaged with. See
+`docs/phase-1-make-groq-setup.md`'s system prompt for the full corrected
+version — it separates "must be grounded in the KB" (policy facts) from
+"can use its own reasoning" (general engagement, clarifying questions),
+and only escalates for genuine reasons.
 
 ---
 
